@@ -11,5 +11,8 @@ def requestDataFile():
         dataDict = json.load(fp)
     return dataDict
 
+def storeDataFile(dataDict):
+    with open("movieDB.json", "w") as fp:
+        json.dump(dataDict , fp)
 
 # updateDataFile()

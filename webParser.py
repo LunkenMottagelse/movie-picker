@@ -3,9 +3,9 @@ from urllib.request import urlopen
 import datetime
 import time
 
-oldestYearLimit = 2020
+oldestYearLimit = 1990
 
-def parseImdbPage(url, year, id):
+def parseImdbPage(url, year):
     html = urlopen(url)
     soup = BeautifulSoup(html, features="html.parser")
     moviesOnPage = {}
@@ -13,22 +13,20 @@ def parseImdbPage(url, year, id):
 
     
     for movieElement in movieElementList:
-        movieEntry = {
-			'name': '',
+        movieEntry = { # Name will be the key
+			# 'name': '',
             'rating': '',
             'year': str(year),
             'certificate': '',
             'runtime': '',
             'genre': '',
             'description': '',
+            'seen': False,
             # 'director': '',
             # 'stars': []
             # 'votes': '',
             # 'gross': ''
         }
-        if movieElement.find('h3', attrs={'class': 'lister-item-header'}).find('a').text:
-            nameValue = movieElement.find('h3', attrs={'class': 'lister-item-header'}).find('a').text.strip()
-            movieEntry['name'] = nameValue
         if movieElement.find('div', attrs={'class': 'ratings-bar'}):
             if movieElement.find('div', attrs={'class': 'ratings-bar'}).find('strong').text:
                 ratingValue = movieElement.find('div', attrs={'class': 'ratings-bar'}).find('strong').text.strip()
@@ -53,19 +51,20 @@ def parseImdbPage(url, year, id):
             description_value = p_list[1].text.strip()
             movieEntry['description'] = description_value
         
-        moviesOnPage[id] = movieEntry
-        id += 1
+        if movieElement.find('h3', attrs={'class': 'lister-item-header'}).find('a').text:
+            nameValue = movieElement.find('h3', attrs={'class': 'lister-item-header'}).find('a').text.strip()
+            
+            moviesOnPage[nameValue] = movieEntry
     
-    return moviesOnPage, id
+    return moviesOnPage
 
 def ParseImdb():
     currentYear = int(datetime.datetime.now().year)
     allMoviesDb = {}
-    id = 0 # Ugly but this is how we do it
     for year in range(oldestYearLimit, currentYear + 1):
         url = "https://www.imdb.com/search/title/?release_date=" + str(year) + "," + str(year) + "&title_type=feature"
-        newMovies, id = parseImdbPage(url, year, id)
+        newMovies = parseImdbPage(url, year)
         allMoviesDb = {**allMoviesDb, **newMovies}
-        time.sleep(1)
+        time.sleep(0.5)
         print("retrieved movies from " + str(year))
     return allMoviesDb
